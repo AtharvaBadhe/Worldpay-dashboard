@@ -41,7 +41,7 @@ if st.session_state.token is None:
             authorization_response=auth_response_url
         )
         st.session_state.token = token
-        st.experimental_rerun()
+        st.rerun()
     else:
         oauth = OAuth2Session(client_id, redirect_uri=redirect_uri, scope=scope)
         authorization_url, state = oauth.authorization_url(auth_url)
