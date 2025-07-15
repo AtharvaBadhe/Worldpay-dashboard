@@ -1,15 +1,13 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 import json
 import requests
 import os
 from requests_oauthlib import OAuth2Session
 from datetime import datetime
 
-# Load Google OAuth credentials from downloaded file
+# Load credentials
 with open("client_secret_326238244698-tscgcrvvb8021lj1qp67v25t8s8il146.apps.googleusercontent.com.json") as f:
     config = json.load(f)["web"]
 
@@ -18,41 +16,39 @@ client_secret = config["client_secret"]
 redirect_uri = config["redirect_uris"][0]
 auth_url = config["auth_uri"]
 token_url = config["token_uri"]
-if "token" not in st.session_state:
-    st.session_state.token = None
-if st.session_state.token:
-    token = st.session_state.token
-    # proceed with authenticated stuff
-else:
-    st.warning("Please login to continue.")
-    st.stop()
-    
-    
 
+# Required scopes
 scope = [
     "https://www.googleapis.com/auth/userinfo.email",
     "https://www.googleapis.com/auth/userinfo.profile",
     "openid"
 ]
 
-# Authenticate
+# Initialize token in session_state
 if "token" not in st.session_state:
+    st.session_state.token = None
+
+# OAuth login flow
+if st.session_state.token is None:
     if "code" in st.query_params:
-        oauth = OAuth2Session(
-            client_id,
-            redirect_uri=redirect_uri,
-            scope=["openid", "email", "profile"]
-        )
-        auth_response_url = ...
+        oauth = OAuth2Session(client_id, redirect_uri=redirect_uri, scope=scope)
+        code = st.query_params.get("code")
+        auth_response_url = f"{redirect_uri}?code={code}"  # this is what Google redirected with
+
         token = oauth.fetch_token(
             token_url,
             client_secret=client_secret,
             authorization_response=auth_response_url
         )
         st.session_state.token = token
+        st.experimental_rerun()
+    else:
+        oauth = OAuth2Session(client_id, redirect_uri=redirect_uri, scope=scope)
+        authorization_url, state = oauth.authorization_url(auth_url)
+        st.markdown(f"[Login with Google]({authorization_url})")
+        st.stop()
 
-
-# Get user info
+# Use the token
 token = st.session_state.token
 oauth = OAuth2Session(client_id, token=token)
 user_info = oauth.get("https://www.googleapis.com/oauth2/v3/userinfo").json()
@@ -60,22 +56,23 @@ user_info = oauth.get("https://www.googleapis.com/oauth2/v3/userinfo").json()
 user_email = user_info.get("email")
 user_name = user_info.get("name")
 
-# Email check
-if user_email != "atharva.r.badhe@gamil.com":
+# ✅ FIXED email spelling
+if user_email != "atharva.r.badhe@gmail.com":
     st.error("Access denied. Contact admin.")
     st.stop()
 
+# ✅ Success login sidebar
 st.sidebar.success(f"Logged in as: {user_name} ({user_email})")
 
-# Log viewer
 # Show viewer log
 if st.sidebar.checkbox("Show viewer list (admin only)"):
     try:
         df_log = pd.read_csv("viewer_log.csv", names=["Name", "Email", "Timestamp"])
         st.subheader("Viewer Access Log")
-        st.dataframe(df_log[::-1])  # reverse order, latest first
+        st.dataframe(df_log[::-1])  # reverse order
     except FileNotFoundError:
         st.warning("No viewer log found yet.")
+
 
 
 # Page configuration
