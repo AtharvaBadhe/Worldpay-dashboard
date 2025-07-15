@@ -26,16 +26,20 @@ scope = [
 ]
 
 # Authenticate
-auth_response_url = os.environ.get("STREAMLIT_SERVER_URL", redirect_uri)
-if st.query_params:
-    query = "&".join([f"{k}={v}" for k, v in st.query_params.items()])
-    auth_response_url = f"{redirect_uri}?{query}"
-
-token = oauth.fetch_token(
-    token_url,
-    client_secret=client_secret,
-    authorization_response=auth_response_url  # ✅ correct way
-)
+if "token" not in st.session_state:
+    if "code" in st.query_params:
+        oauth = OAuth2Session(
+            client_id,
+            redirect_uri=redirect_uri,
+            scope=["openid", "email", "profile"]
+        )
+        auth_response_url = ...
+        token = oauth.fetch_token(
+            token_url,
+            client_secret=client_secret,
+            authorization_response=auth_response_url
+        )
+        st.session_state.token = token
 
 
 # Get user info
