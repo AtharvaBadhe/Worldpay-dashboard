@@ -5,7 +5,7 @@ import requests
 from requests_oauthlib import OAuth2Session
 from datetime import datetime
 
-# Load Google OAuth credentials from downloaded JSON file
+# Load Google OAuth credentials
 with open("client_secret_326238244698-tscgcrvvb8021lj1qp67v25t8s8il146.apps.googleusercontent.com.json") as f:
     config = json.load(f)["web"]
 
@@ -15,11 +15,17 @@ redirect_uri = config["redirect_uris"][0]
 auth_url = config["auth_uri"]
 token_url = config["token_uri"]
 
-# Define scopes
+# Scopes required for user info
 scope = [
     "https://www.googleapis.com/auth/userinfo.email",
     "https://www.googleapis.com/auth/userinfo.profile",
     "openid"
+]
+
+# Admin email list
+ADMIN_EMAILS = [
+    "atharva.r.badhe@gmail.com",
+    "astrik@wavess.io"
 ]
 
 # Initialize session state
@@ -54,18 +60,16 @@ user_info = oauth.get("https://www.googleapis.com/oauth2/v3/userinfo").json()
 user_email = user_info.get("email")
 user_name = user_info.get("name")
 
-# Show login info in sidebar
+# Show sidebar login info
 st.sidebar.success(f"Logged in as: {user_name} ({user_email})")
 
-# Log viewer info to CSV
+# Log the viewer
 log_entry = f"{user_name},{user_email},{datetime.now()}\n"
 with open("viewer_log.csv", "a") as f:
     f.write(log_entry)
 
 # Admin-only viewer log
-ADMIN_EMAIL = "atharva.r.badhe@gmail.com"
-
-if user_email == ADMIN_EMAIL:
+if user_email in ADMIN_EMAILS:
     if st.sidebar.checkbox("Show viewer list (admin only)"):
         try:
             df_log = pd.read_csv("viewer_log.csv", names=["Name", "Email", "Timestamp"])
@@ -73,7 +77,6 @@ if user_email == ADMIN_EMAIL:
             st.dataframe(df_log[::-1])  # latest first
         except FileNotFoundError:
             st.warning("No viewer log found yet.")
-
 
 # Page configuration
 st.set_page_config(
