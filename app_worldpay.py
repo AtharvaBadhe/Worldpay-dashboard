@@ -25,18 +25,16 @@ scope = [
 ]
 
 # Authenticate
-if "token" not in st.session_state:
-    if "code" in st.query_params:
-        oauth = OAuth2Session(client_id, redirect_uri=redirect_uri, scope=scope)
-        token = oauth.fetch_token(token_url, client_secret=client_secret, authorization_response=st.request.url)
-        st.session_state.token = token
-        st.experimental_rerun()
-    else:
-        oauth = OAuth2Session(client_id, redirect_uri=redirect_uri, scope=scope)
-        authorization_url, _ = oauth.authorization_url(auth_url, access_type="offline", prompt="select_account")
-        st.markdown("## Please authenticate to access the dashboard")
-        st.markdown(f"[Click here to login with Google]({authorization_url})")
-        st.stop()
+code = st.query_params.get("code")
+
+auth_response_url = f"{redirect_uri}?code={code}"
+
+token = oauth.fetch_token(
+    token_url,
+    client_secret=client_secret,
+    authorization_response=auth_response_url
+)
+
 
 # Get user info
 token = st.session_state.token
