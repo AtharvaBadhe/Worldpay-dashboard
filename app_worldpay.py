@@ -5,6 +5,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import json
 import requests
+import os
 from requests_oauthlib import OAuth2Session
 from datetime import datetime
 
@@ -25,14 +26,15 @@ scope = [
 ]
 
 # Authenticate
-code = st.query_params.get("code")
-
-auth_response_url = f"{redirect_uri}?code={code}"
+auth_response_url = os.environ.get("STREAMLIT_SERVER_URL", redirect_uri)
+if st.query_params:
+    query = "&".join([f"{k}={v}" for k, v in st.query_params.items()])
+    auth_response_url = f"{redirect_uri}?{query}"
 
 token = oauth.fetch_token(
     token_url,
     client_secret=client_secret,
-    authorization_response=auth_response_url
+    authorization_response=auth_response_url  # ✅ correct way
 )
 
 
