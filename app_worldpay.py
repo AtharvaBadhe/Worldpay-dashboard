@@ -18,6 +18,8 @@ client_secret = config["client_secret"]
 redirect_uri = config["redirect_uris"][0]
 auth_url = config["auth_uri"]
 token_url = config["token_uri"]
+if "token" not in st.session_state:
+    st.session_state.token = None
 
 scope = [
     "https://www.googleapis.com/auth/userinfo.email",
