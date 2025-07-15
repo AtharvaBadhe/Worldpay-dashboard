@@ -68,9 +68,17 @@ log_entry = f"{user_name},{user_email},{datetime.now()}\n"
 with open("viewer_log.csv", "a") as f:
     f.write(log_entry)
 
-# Admin-only viewer log
+# Admin-only section
 if user_email in ADMIN_EMAILS:
-    if st.sidebar.checkbox("Show viewer list (admin only)"):
+    st.sidebar.markdown("### 🛠️ Admin Tools")
+    
+    # Clear viewer log button
+    if st.sidebar.button("🗑️ Clear Viewer Log"):
+        open("viewer_log.csv", "w").close()
+        st.success("Viewer log has been cleared.")
+
+    # Show viewer log checkbox
+    if st.sidebar.checkbox("📋 Show Viewer Log"):
         try:
             df_log = pd.read_csv("viewer_log.csv", names=["Name", "Email", "Timestamp"])
             st.subheader("Viewer Access Log")
