@@ -20,6 +20,14 @@ auth_url = config["auth_uri"]
 token_url = config["token_uri"]
 if "token" not in st.session_state:
     st.session_state.token = None
+if st.session_state.token:
+    token = st.session_state.token
+    # proceed with authenticated stuff
+else:
+    st.warning("Please login to continue.")
+    st.stop()
+    
+    
 
 scope = [
     "https://www.googleapis.com/auth/userinfo.email",
